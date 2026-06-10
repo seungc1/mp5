@@ -328,6 +328,33 @@ button {
   font-weight: 700;
 }
 
+.book-info-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.book-info-actions .book-info-back {
+  margin-bottom: 0;
+}
+
+.book-info-edit {
+  border: 0;
+  border-radius: 4px;
+  background-color: #0d6efd;
+  color: white;
+  padding: 8px 16px;
+  font-weight: 700;
+}
+
+.book-info-notice {
+  margin-bottom: 20px;
+  color: #666;
+  font-size: 14px;
+}
+
 .book-info-layout {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
@@ -393,6 +420,207 @@ button {
   overflow-wrap: anywhere;
 }
 
+.book-edit-form {
+  min-width: 0;
+}
+
+.book-edit-form .form-group {
+  margin-bottom: 14px;
+}
+
+.book-edit-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.book-edit-form label {
+  display: block;
+  margin-bottom: 6px;
+  color: #555;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.book-edit-form input,
+.book-edit-form textarea {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  outline: none;
+}
+
+.book-edit-form textarea {
+  resize: vertical;
+}
+
+.book-edit-ai-row {
+  margin: 4px 0 16px;
+}
+
+.book-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.book-edit-actions .ai-reset-btn,
+.book-edit-actions .primary-action {
+  width: auto;
+  margin-top: 0;
+}
+
+.book-delete-btn {
+  width: auto;
+  border: 0;
+  border-radius: 4px;
+  background-color: #dc2626;
+  color: white;
+  padding: 10px 16px;
+  font-weight: 700;
+}
+
+.book-delete-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.ai-cover-page {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 28px;
+}
+
+.ai-cover-preview,
+.ai-cover-form {
+  min-width: 0;
+}
+
+.ai-cover-preview h3,
+.ai-cover-form h2 {
+  margin-bottom: 18px;
+}
+
+.ai-image-box {
+  display: flex;
+  width: 100%;
+  height: 390px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px dashed #ced4da;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  text-align: center;
+}
+
+.generated-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ai-empty-state,
+.ai-loading-state {
+  color: #777;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.spinner {
+  margin-bottom: 8px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.ai-action-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.ai-api-key-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #555;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ai-api-key-field input,
+.ai-cover-form input,
+.ai-cover-form textarea {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  outline: none;
+}
+
+.ai-cover-form textarea {
+  resize: vertical;
+}
+
+.ai-generate-btn,
+.ai-regenerate-btn,
+.ai-reset-btn {
+  width: 100%;
+  border: 0;
+  border-radius: 4px;
+  padding: 10px;
+  font-weight: 700;
+}
+
+.ai-generate-btn {
+  background-color: #4263eb;
+  color: white;
+}
+
+.ai-regenerate-btn {
+  background-color: #0d6efd;
+  color: white;
+}
+
+.ai-reset-btn {
+  border: 1px solid #ddd;
+  background: white;
+  color: #555;
+}
+
+.ai-generate-btn:disabled,
+.ai-regenerate-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.ai-message {
+  color: #666;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ai-cover-form .form-group {
+  margin-bottom: 16px;
+}
+
+.ai-cover-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.ai-cover-form label {
+  display: block;
+  margin-bottom: 6px;
+  color: #555;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 @media (max-width: 1100px) {
   .site-header,
   .container {
@@ -434,12 +662,18 @@ button {
   }
 
   .book-info-layout,
-  .book-info-row {
+  .book-info-row,
+  .book-edit-form .form-row {
     grid-template-columns: 1fr;
   }
 
   .book-info-panel,
   .book-info-empty {
     padding: 20px;
+  }
+
+  .ai-cover-page,
+  .ai-cover-form .form-row {
+    grid-template-columns: 1fr;
   }
 }

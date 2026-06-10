@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const detailFields = [
@@ -11,6 +12,22 @@ const detailFields = [
   ["ID", "id"],
 ];
 
+function getCover(book) {
+  return book?.cover || book?.coverers || book?.coverUrl || book?.coverImageUrl || "";
+}
+
+function getPublishedYear(book) {
+  return book?.publishedYear || book?.year || "";
+}
+
+function getBookDescription(book) {
+  return book?.description || book?.content || "";
+}
+
+function isDatabaseBook(book) {
+  return Number.isInteger(Number(book?.id));
+}
+
 function formatValue(label, value) {
   if (!value) {
     return "No information";
@@ -23,11 +40,183 @@ function formatValue(label, value) {
   return value;
 }
 
-function BookInfoPage() {
+function toEditForm(book) {
+  return {
+    title: book.title || "",
+    author: book.author || "",
+    publisher: book.publisher || "",
+    publishedYear: getPublishedYear(book),
+    isbn: book.isbn || "",
+    type: book.type || "",
+    price: book.price || "",
+    description: getBookDescription(book),
+    cover: getCover(book),
+    apiKey: "",
+  };
+}
+
+function toBookPayload(formData) {
+  const year = Number(formData.publishedYear);
+  const price = Number(formData.price);
+
+  return {
+    title: formData.title.trim(),
+    author: formData.author.trim(),
+    publisher: formData.publisher.trim(),
+    year: Number.isFinite(year) && formData.publishedYear !== "" ? year : null,
+    type: formData.type.trim(),
+    content: formData.description.trim(),
+    description: formData.description.trim(),
+    coverImageUrl: formData.cover.trim(),
+    coverUrl: formData.cover.trim(),
+    isbn: formData.isbn.trim(),
+    isAvailable: true,
+    price: Number.isFinite(price) && formData.price !== "" ? price : 0,
+  };
+}
+
+function BookInfoPage({ isLoggedIn }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const book = location.state?.book;
-  const cover = book?.cover || book?.coverers || "";
+  const [book, setBook] = useState(location.state?.book);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState(() => toEditForm(location.state?.book || {}));
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const cover = isEditing ? formData.cover : getCover(book);
+  const canEdit = isLoggedIn && isDatabaseBook(book);
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((current) => ({ ...current, [name]: value }));
+  };
+
+  const handleEditClick = () => {
+    setFormData(toEditForm(book));
+    setIsEditing(true);
+    setMessage("");
+  };
+
+  const handleGenerateImage = async () => {
+    if (!showApiKeyInput) {
+      setShowApiKeyInput(true);
+      setMessage("Use the backend OPENAI_API_KEY, or enter a key here before generating.");
+      return;
+    }
+
+    if (!formData.title.trim()) {
+      setMessage("Enter a title before generating a cover.");
+      return;
+    }
+
+    setIsGenerating(true);
+    setMessage("Generating cover image...");
+
+    try {
+      const response = await fetch("/api/images/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          author: formData.author,
+          publisher: formData.publisher,
+          description: formData.description,
+          apiKey: formData.apiKey,
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Image generation failed.");
+      }
+
+      setFormData((current) => ({ ...current, cover: data.imageUrl }));
+      setMessage("");
+    } catch (error) {
+      console.error("AI cover generation failed:", error);
+      setMessage(error.message);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleSave = async (event) => {
+    event.preventDefault();
+
+    if (!formData.title.trim() || !formData.author.trim()) {
+      setMessage("Title and author are required.");
+      return;
+    }
+
+    setIsSaving(true);
+    setMessage("Saving book...");
+
+    try {
+      const response = await fetch(`/books/${book.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(toBookPayload(formData)),
+      });
+      const savedBook = await response.json();
+
+      if (!response.ok) {
+        throw new Error(savedBook.message || "Book update failed.");
+      }
+
+      const normalizedBook = {
+        ...savedBook,
+        publishedYear: savedBook.year,
+        cover: savedBook.coverUrl || savedBook.coverImageUrl,
+      };
+
+      setBook(normalizedBook);
+      setFormData(toEditForm(normalizedBook));
+      setIsEditing(false);
+      setMessage("Book saved.");
+    } catch (error) {
+      console.error("Book update failed:", error);
+      setMessage(error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    const confirmed = window.confirm(
+      `Delete "${book.title || "this book"}"? This cannot be undone.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setIsSaving(true);
+    setMessage("Deleting book...");
+
+    try {
+      const response = await fetch(`/books/${book.id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Book delete failed.");
+      }
+
+      navigate("/", { state: { refreshBooks: true } });
+    } catch (error) {
+      console.error("Book delete failed:", error);
+      setMessage(error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   if (!book) {
     return (
@@ -45,9 +234,27 @@ function BookInfoPage() {
   return (
     <main className="book-info-page">
       <section className="book-info-panel">
-        <button className="book-info-back" type="button" onClick={() => navigate(-1)}>
-          Back
-        </button>
+        <div className="book-info-actions">
+          <button className="book-info-back" type="button" onClick={() => navigate(-1)}>
+            Back
+          </button>
+
+          {canEdit && !isEditing && (
+            <button className="book-info-edit" type="button" onClick={handleEditClick}>
+              Edit
+            </button>
+          )}
+        </div>
+
+        {!canEdit && isLoggedIn && (
+          <p className="book-info-notice">
+            This search result is not saved in the database yet, so it cannot be edited.
+          </p>
+        )}
+
+        {!isLoggedIn && (
+          <p className="book-info-notice">Log in as admin to edit database books.</p>
+        )}
 
         <div className="book-info-layout">
           <div className="book-info-cover">
@@ -58,19 +265,145 @@ function BookInfoPage() {
             )}
           </div>
 
-          <div className="book-info-content">
-            <h1>{book.title || "Untitled book"}</h1>
-            <p className="book-info-author">{book.author || "Unknown author"}</p>
+          {isEditing ? (
+            <form className="book-edit-form" onSubmit={handleSave}>
+              <div className="form-group">
+                <label>Title *</label>
+                <input name="title" value={formData.title} onChange={handleInputChange} />
+              </div>
 
-            <dl className="book-info-details">
-              {detailFields.map(([label, key]) => (
-                <div className="book-info-row" key={key}>
-                  <dt>{label}</dt>
-                  <dd>{formatValue(label, book[key])}</dd>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Author *</label>
+                  <input name="author" value={formData.author} onChange={handleInputChange} />
                 </div>
-              ))}
-            </dl>
-          </div>
+
+                <div className="form-group">
+                  <label>Publisher</label>
+                  <input name="publisher" value={formData.publisher} onChange={handleInputChange} />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Published Year</label>
+                  <input
+                    name="publishedYear"
+                    type="number"
+                    value={formData.publishedYear}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Price</label>
+                  <input
+                    name="price"
+                    type="number"
+                    value={formData.price}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>ISBN</label>
+                  <input name="isbn" value={formData.isbn} onChange={handleInputChange} />
+                </div>
+
+                <div className="form-group">
+                  <label>Type</label>
+                  <input name="type" value={formData.type} onChange={handleInputChange} />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Description</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  rows="5"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Cover Image URL</label>
+                <input name="cover" value={formData.cover} onChange={handleInputChange} />
+              </div>
+
+              <div className="ai-action-row book-edit-ai-row">
+                {showApiKeyInput && (
+                  <label className="ai-api-key-field">
+                    OpenAI API Key
+                    <input
+                      type="password"
+                      name="apiKey"
+                      value={formData.apiKey}
+                      onChange={handleInputChange}
+                      placeholder="Optional if OPENAI_API_KEY is set on the backend"
+                    />
+                  </label>
+                )}
+
+                <button
+                  type="button"
+                  className="ai-generate-btn"
+                  disabled={isGenerating}
+                  onClick={handleGenerateImage}
+                >
+                  {formData.cover ? "Regenerate AI Cover" : "Generate AI Cover"}
+                </button>
+              </div>
+
+              {message && <p className="ai-message">{message}</p>}
+
+              <div className="book-edit-actions">
+                <button
+                  type="button"
+                  className="book-delete-btn"
+                  disabled={isSaving}
+                  onClick={handleDelete}
+                >
+                  Delete Book
+                </button>
+                <button
+                  type="button"
+                  className="ai-reset-btn"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setMessage("");
+                  }}
+                >
+                  Cancel
+                </button>
+                <button className="primary-action" type="submit" disabled={isSaving}>
+                  {isSaving ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="book-info-content">
+              <h1>{book.title || "Untitled book"}</h1>
+              <p className="book-info-author">{book.author || "Unknown author"}</p>
+
+              <dl className="book-info-details">
+                {detailFields.map(([label, key]) => {
+                  const value = key === "publishedYear" ? getPublishedYear(book) : book[key];
+
+                  return (
+                    <div className="book-info-row" key={key}>
+                      <dt>{label}</dt>
+                      <dd>{formatValue(label, value)}</dd>
+                    </div>
+                  );
+                })}
+              </dl>
+
+              {message && <p className="ai-message">{message}</p>}
+            </div>
+          )}
         </div>
       </section>
     </main>

@@ -7,11 +7,12 @@ import CartPage from "./pages/CartPage";
 import HomePage from "./pages/HomePage";
 import MyPage from "./pages/MyPage";
 import WishlistPage from "./pages/WishlistPage";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import PaymentPage from "./pages/PaymentPage";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFail from "./pages/PaymentFail";
 import BookInfoPage from "./pages/BookInfoPage";
+import EditBookPage from "./pages/EditBookPage";
 
 const categories = [
   "All Books",
@@ -24,6 +25,7 @@ const categories = [
 
 function App() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [allBooks, setAllBooks] = useState([]);
   const [filteredBooks, setFilteredBooks] = useState([]);
   const [activeCategory, setActiveCategory] = useState("All Books");
@@ -36,27 +38,45 @@ function App() {
   const [searchStatus, setSearchStatus] = useState("");
   const [isSearching, setIsSearching] = useState(false);
 
-  useEffect(() => {
-    const fetchBooks = async () => {
-      try {
-        const response = await fetch("/db.json");
+  const fetchBooksFromDb = async () => {
+    try {
+      let response = await fetch("/books");
 
-        if (!response.ok) {
-          throw new Error("Failed to load book data.");
-        }
-
-        const data = await response.json();
-        const books = Array.isArray(data) ? data : data.books || [];
-
-        setAllBooks(books);
-        setFilteredBooks(books);
-      } catch (error) {
-        console.error("Book data loading failed:", error);
+      if (!response.ok) {
+        response = await fetch("/db.json");
       }
-    };
 
-    fetchBooks();
+      if (!response.ok) {
+        throw new Error("Failed to load book data.");
+      }
+
+      const data = await response.json();
+      const books = Array.isArray(data) ? data : data.books || [];
+      const normalizedBooks = books.map((book) => ({
+        ...book,
+        publishedYear: book.publishedYear || book.year,
+        cover: book.cover || book.coverUrl || book.coverImageUrl,
+      }));
+
+      setAllBooks(normalizedBooks);
+      setFilteredBooks(normalizedBooks);
+      return normalizedBooks;
+    } catch (error) {
+      console.error("Book data loading failed:", error);
+      return [];
+    }
+  };
+
+  useEffect(() => {
+    fetchBooksFromDb();
   }, []);
+
+  useEffect(() => {
+    if (location.pathname === "/" && location.state?.refreshBooks) {
+      goHome();
+      navigate("/", { replace: true, state: null });
+    }
+  }, [location.pathname, location.state]);
 
   const handleCategoryClick = (categoryName) => {
     setCurrentView("home");
@@ -79,13 +99,13 @@ function App() {
     setCurrentView(viewName);
   };
 
-  const goHome = () => {
+  const goHome = async () => {
     setCurrentView("home");
     setActiveCategory("All Books");
     setSearchTerm("");
     setSearchTitle("Recommended Books");
     setSearchStatus("");
-    setFilteredBooks(allBooks);
+    await fetchBooksFromDb();
   };
 
   const handleSearch = async (event) => {
@@ -162,6 +182,8 @@ function App() {
         return <CartPage onContinueShopping={goHome} />;
       case "wishlist":
         return <WishlistPage />;
+      case "ai-cover":
+        return <EditBookPage onBookCreated={goHome} onCancel={goHome} />;
       default:
         return (
           <HomePage
@@ -219,7 +241,7 @@ function App() {
       <Route path="/payment" element={<PaymentPage />} />
       <Route path="/payment/success" element={<PaymentSuccess />} />
       <Route path="/payment/fail" element={<PaymentFail />} />
-      <Route path="/bookinfo" element={<BookInfoPage />} />
+      <Route path="/bookinfo" element={<BookInfoPage isLoggedIn={isLoggedIn} />} />
     </Routes>
   );
 }

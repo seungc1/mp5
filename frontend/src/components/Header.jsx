@@ -16,14 +16,17 @@ function Header({ searchTerm, onLogoClick, onNavigate, onSearch, onSearchTermCha
       </form>
 
       <nav className="header-icons" aria-label="User navigation">
+        <button type="button" onClick={() => onNavigate("ai-cover")}>
+          책 추가
+        </button>
         <button type="button" onClick={() => onNavigate("mypage")}>
-          My Page
+          내 정보
         </button>
         <button type="button" onClick={() => onNavigate("cart")}>
-          Cart
+          장바구니
         </button>
         <button type="button" onClick={() => onNavigate("wishlist")}>
-          Wishlist
+          찜 목록
         </button>
       </nav>
     </header>

@@ -35,7 +35,10 @@ public class Book {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(columnDefinition = "TEXT")
     private String coverImageUrl;
+
+    @Column(columnDefinition = "TEXT")
     private String coverUrl;
 
     private String isbn;

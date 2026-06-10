@@ -2,12 +2,19 @@ const transparentPixel =
   "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
 
 function formatPrice(price) {
-  return price ? price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "0";
+  return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function getCover(book) {
+  return book.cover || book.coverers || book.coverUrl || book.coverImageUrl || "";
 }
 
 function BookCard({ book, onBookSelect, onAddToCart }) {
-  const cover = book.cover || book.coverers || "";
-  const detail = [book.publisher, book.publishedYear].filter(Boolean).join(" / ");
+  const cover = getCover(book);
+  const publishedYear = book.publishedYear || book.year;
+  const detail = [book.publisher, publishedYear].filter(Boolean).join(" / ");
+  const price = Number(book.price);
+  const hasPrice = Number.isFinite(price) && price > 0;
 
   const handleImageError = (event) => {
     event.currentTarget.src = transparentPixel;
@@ -35,9 +42,7 @@ function BookCard({ book, onBookSelect, onAddToCart }) {
       <p className="author">{book.author || "Unknown author"}</p>
       {detail && <p className="book-detail">{detail}</p>}
       {book.isbn && <p className="book-detail">ISBN {book.isbn}</p>}
-      <p className="price">
-        {book.price ? `${formatPrice(book.price)}원` : "Library API result"}
-      </p>
+      {hasPrice && <p className="price">{formatPrice(price)}원</p>}
       <button
         className="btn-cart"
         type="button"
