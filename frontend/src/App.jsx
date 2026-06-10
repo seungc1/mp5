@@ -7,10 +7,11 @@ import CartPage from "./pages/CartPage";
 import HomePage from "./pages/HomePage";
 import MyPage from "./pages/MyPage";
 import WishlistPage from "./pages/WishlistPage";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import PaymentPage from "./pages/PaymentPage";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFail from "./pages/PaymentFail";
+import BookInfoPage from "./pages/BookInfoPage";
 
 const categories = [
   "All Books",
@@ -22,6 +23,7 @@ const categories = [
 ];
 
 function App() {
+  const navigate = useNavigate();
   const [allBooks, setAllBooks] = useState([]);
   const [filteredBooks, setFilteredBooks] = useState([]);
   const [activeCategory, setActiveCategory] = useState("All Books");
@@ -29,6 +31,10 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userId, setUserId] = useState("");
   const [userPw, setUserPw] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTitle, setSearchTitle] = useState("Recommended Books");
+  const [searchStatus, setSearchStatus] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -76,7 +82,47 @@ function App() {
   const goHome = () => {
     setCurrentView("home");
     setActiveCategory("All Books");
+    setSearchTerm("");
+    setSearchTitle("Recommended Books");
+    setSearchStatus("");
     setFilteredBooks(allBooks);
+  };
+
+  const handleSearch = async (event) => {
+    event.preventDefault();
+
+    const keyword = searchTerm.trim();
+
+    if (!keyword) {
+      goHome();
+      return;
+    }
+
+    setCurrentView("home");
+    setActiveCategory("All Books");
+    setIsSearching(true);
+    setSearchTitle(`Search results for "${keyword}"`);
+    setSearchStatus("Searching the National Library API...");
+
+    try {
+      const response = await fetch(
+        `/api/books/search?keyword=${encodeURIComponent(keyword)}`
+      );
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Search request failed.");
+      }
+
+      setFilteredBooks(Array.isArray(data.books) ? data.books : []);
+      setSearchStatus("");
+    } catch (error) {
+      console.error("National Library search failed:", error);
+      setFilteredBooks([]);
+      setSearchStatus(error.message);
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const handleLogin = () => {
@@ -104,6 +150,10 @@ function App() {
     alert(`'${bookTitle}' was added to your cart.`);
   };
 
+  const handleBookSelect = (book) => {
+    navigate("/bookinfo", { state: { book } });
+  };
+
   const renderCurrentView = () => {
     switch (currentView) {
       case "mypage":
@@ -113,7 +163,16 @@ function App() {
       case "wishlist":
         return <WishlistPage />;
       default:
-        return <HomePage books={filteredBooks} onAddToCart={handleAddToCart} />;
+        return (
+          <HomePage
+            books={filteredBooks}
+            isLoading={isSearching}
+            statusMessage={searchStatus}
+            title={searchTitle}
+            onBookSelect={handleBookSelect}
+            onAddToCart={handleAddToCart}
+          />
+        );
     }
   };
 
@@ -123,7 +182,13 @@ function App() {
         path="/"
         element={
           <div className="app-container">
-            <Header onLogoClick={goHome} onNavigate={handleNavigation} />
+            <Header
+              searchTerm={searchTerm}
+              onLogoClick={goHome}
+              onNavigate={handleNavigation}
+              onSearch={handleSearch}
+              onSearchTermChange={setSearchTerm}
+            />
 
             <div className="container">
               <CategorySidebar
@@ -154,6 +219,7 @@ function App() {
       <Route path="/payment" element={<PaymentPage />} />
       <Route path="/payment/success" element={<PaymentSuccess />} />
       <Route path="/payment/fail" element={<PaymentFail />} />
+      <Route path="/bookinfo" element={<BookInfoPage />} />
     </Routes>
   );
 }
