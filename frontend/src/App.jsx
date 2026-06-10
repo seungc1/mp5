@@ -2,32 +2,26 @@ import { useState, useEffect } from 'react';
 import './App.css'; 
 
 function App() {
-  // 1. 책 데이터 상태
-  const [allBooks, setAllBooks] = useState([]);
-  const [filteredBooks, setFilteredBooks] = useState([]);
-  const [activeCategory, setActiveCategory] = useState('전체 도서');
+    const [books, setBooks] = useState([]);
 
-  // 2. 로그인 상태
-  const [userId, setUserId] = useState('');
-  const [userPw, setUserPw] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+    useEffect(() => {
+        fetchBooks();
+    }, []);
 
-  // 3. ⭐️ 현재 화면 상태 (home, mypage, cart, wishlist 중 하나)
-  const [currentView, setCurrentView] = useState('home');
+    const fetchBooks = async () => {
+        try {
+            const response = await fetch('/db.json');
+            if (!response.ok) {
+                throw new Error('도서 데이터를 불러오지 못했습니다.');
+            }
 
-  // 처음 켜질 때 db.json 가져오기
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('db.json'); 
-        if (!response.ok) throw new Error('데이터 로딩 실패');
-        const data = await response.json();
-        const books = Array.isArray(data) ? data : data.books || [];
-        setAllBooks(books);
-        setFilteredBooks(books);
-      } catch (error) {
-        console.error(error);
-      }
+            const data = await response.json();
+            const bookData = Array.isArray(data) ? data : data.books;
+
+            setBooks(bookData);
+        } catch (error) {
+            console.error('도서 데이터 로딩 실패:', error);
+        }
     };
     fetchData();
   }, []);
