@@ -1,0 +1,9 @@
+{
+  "books": [
+    { "id": 1, "title": "클린 코드", "author": "로버트 마틴", "price": 33000, "cover": "" },
+    { "id": 2, "title": "자바의 정석", "author": "남궁성", "price": 42000, "cover": "" },
+    { "id": 3, "title": "리팩터링", "author": "마틴 파울러", "price": 36000, "cover": "" },
+    { "id": 4, "title": "객체지향의 사실과 오해", "author": "조영호", "price": 26000, "cover": "" },
+    { "id": 5, "title": "HTTP 완벽 가이드", "author": "데이빗 고울리", "price": 54000, "cover": "" }
+  ]
+}
