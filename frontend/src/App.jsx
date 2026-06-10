@@ -7,6 +7,10 @@ import CartPage from "./pages/CartPage";
 import HomePage from "./pages/HomePage";
 import MyPage from "./pages/MyPage";
 import WishlistPage from "./pages/WishlistPage";
+import { Routes, Route } from "react-router-dom";
+import PaymentPage from "./pages/PaymentPage";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentFail from "./pages/PaymentFail";
 
 const categories = [
   "All Books",
@@ -30,12 +34,14 @@ function App() {
     const fetchBooks = async () => {
       try {
         const response = await fetch("/db.json");
+
         if (!response.ok) {
           throw new Error("Failed to load book data.");
         }
 
         const data = await response.json();
         const books = Array.isArray(data) ? data : data.books || [];
+
         setAllBooks(books);
         setFilteredBooks(books);
       } catch (error) {
@@ -112,32 +118,43 @@ function App() {
   };
 
   return (
-    <div className="app-container">
-      <Header onLogoClick={goHome} onNavigate={handleNavigation} />
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <div className="app-container">
+            <Header onLogoClick={goHome} onNavigate={handleNavigation} />
 
-      <div className="container">
-        <CategorySidebar
-          categories={categories}
-          activeCategory={activeCategory}
-          isHomeView={currentView === "home"}
-          onCategoryClick={handleCategoryClick}
-        />
+            <div className="container">
+              <CategorySidebar
+                categories={categories}
+                activeCategory={activeCategory}
+                isHomeView={currentView === "home"}
+                onCategoryClick={handleCategoryClick}
+              />
 
-        <main>{renderCurrentView()}</main>
+              <main>{renderCurrentView()}</main>
 
-        <aside className="right-sidebar">
-          <LoginPanel
-            isLoggedIn={isLoggedIn}
-            userId={userId}
-            userPw={userPw}
-            onUserIdChange={setUserId}
-            onUserPwChange={setUserPw}
-            onLogin={handleLogin}
-            onLogout={handleLogout}
-          />
-        </aside>
-      </div>
-    </div>
+              <aside className="right-sidebar">
+                <LoginPanel
+                  isLoggedIn={isLoggedIn}
+                  userId={userId}
+                  userPw={userPw}
+                  onUserIdChange={setUserId}
+                  onUserPwChange={setUserPw}
+                  onLogin={handleLogin}
+                  onLogout={handleLogout}
+                />
+              </aside>
+            </div>
+          </div>
+        }
+      />
+
+      <Route path="/payment" element={<PaymentPage />} />
+      <Route path="/payment/success" element={<PaymentSuccess />} />
+      <Route path="/payment/fail" element={<PaymentFail />} />
+    </Routes>
   );
 }
 
