@@ -1,266 +1,37 @@
-/* 기본 리셋 */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Noto Sans KR', sans-serif;
-}
+/* App.css */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; }
+.app-container { background-color: #f5f6f8; color: #333; min-height: 100vh; }
 
-body {
-    background-color: #f5f6f8;
-    color: #333;
-}
+/* 헤더 */
+header { background-color: #0b1a30; color: white; padding: 15px 50px; display: flex; justify-content: space-between; align-items: center; }
+.logo { font-size: 24px; font-weight: bold; }
+.global-search input { width: 400px; padding: 10px; border: none; border-radius: 4px 0 0 4px; outline: none; }
+.global-search button { padding: 10px 20px; background-color: #0d6efd; color: white; border: none; border-radius: 0 4px 4px 0; cursor: pointer; }
+.header-icons { display: flex; gap: 20px; cursor: pointer; }
 
-/* ---------------- 상단 헤더 ---------------- */
-header {
-    background-color: #0b1a30;
-    color: white;
-    padding: 15px 50px;
+/* 메인 레이아웃 */
+.container { display: grid; grid-template-columns: 220px 1fr 300px; gap: 20px; max-width: 1400px; margin: 30px auto; padding: 0 20px; }
+.box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+/* 좌측 카테고리 메뉴 */
+.left-sidebar h3 { margin-bottom: 15px; }
+.menu-list { list-style: none; line-height: 2.5; font-size: 15px; }
+.menu-list li { cursor: pointer; color: #555; border-bottom: 1px solid #eee; transition: 0.2s; }
+.menu-list li:hover { color: #0d6efd; font-weight: bold; }
+.menu-list li.active { color: #0d6efd; font-weight: bold; } /* 클릭된 메뉴 스타일 */
 
-.logo {
-    font-size: 24px;
-    font-weight: bold;
+/* 중앙 도서 목록 */
+.hero-banner { background-color: #e6f0fa; padding: 40px; border-radius: 8px; height: 200px; margin-bottom: 20px; }
+.hero-banner p { margin-top: 10px; color: #555; }
+.book-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+.book-card { border: 1px solid #eaeaea; border-radius: 8px; padding: 15px; text-align: center; }
+.book-card img { width: 100%; height: 200px; object-fit: contain; margin-bottom: 10px; }
+.book-card .title { font-weight: bold; font-size: 14px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.book-card .author { font-size: 12px; color: #777; margin-bottom: 5px; }
+.book-card .price { color: #e53e3e; font-weight: bold; }
+.btn-cart { margin-top: 10px; padding: 8px; width: 100%; border: 1px solid #0d6efd; color: #0d6efd; background: white; border-radius: 4px; cursor: pointer; }
+.empty-message { grid-column: span 4; text-align: center; color: #777; padding: 40px 0; }
 
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.global-search {
-    display: flex;
-}
-
-.global-search input {
-    width: 400px;
-    padding: 10px 15px;
-
-    border: none;
-    border-radius: 4px 0 0 4px;
-    outline: none;
-}
-
-.global-search button {
-    padding: 10px 20px;
-
-    background-color: #0d6efd;
-    color: white;
-
-    border: none;
-    border-radius: 0 4px 4px 0;
-
-    cursor: pointer;
-}
-
-.header-icons {
-    display: flex;
-    gap: 20px;
-    font-size: 14px;
-}
-
-/* ---------------- 메인 레이아웃 ---------------- */
-.container {
-    display: grid;
-    grid-template-columns: 220px 1fr 300px;
-    gap: 20px;
-
-    max-width: 1400px;
-    margin: 30px auto;
-    padding: 0 20px;
-}
-
-/* 공통 박스 */
-.box {
-    background: white;
-    padding: 20px;
-
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-/* ---------------- 좌측 사이드바 ---------------- */
-.sidebar-title {
-    margin-bottom: 15px;
-    font-size: 16px;
-}
-
-.left-sidebar .menu-list {
-    list-style: none;
-    line-height: 2.5;
-    font-size: 15px;
-}
-
-.left-sidebar .menu-list li {
-    cursor: pointer;
-    color: #555;
-    border-bottom: 1px solid #eee;
-}
-
-.left-sidebar .menu-list li:hover {
-    color: #0d6efd;
-    font-weight: bold;
-}
-
-/* ---------------- 중앙 콘텐츠 ---------------- */
-.main-content {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.hero-banner {
-    background-color: #e6f0fa;
-    padding: 40px;
-
-    border-radius: 8px;
-    height: 250px;
-
-    display: flex;
-    align-items: center;
-}
-
-.hero-banner p {
-    margin-top: 10px;
-    color: #555;
-}
-
-.section-title {
-    margin-bottom: 15px;
-}
-
-/* 책 목록 */
-.book-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-}
-
-.book-card {
-    border: 1px solid #eaeaea;
-    border-radius: 8px;
-    padding: 15px;
-
-    text-align: center;
-    background: white;
-}
-
-.book-card img {
-    width: 100px;
-    height: 140px;
-
-    background-color: #ccc;
-    margin-bottom: 10px;
-}
-
-.book-card .title {
-    font-weight: bold;
-    font-size: 14px;
-    margin-bottom: 5px;
-}
-
-.book-card .author {
-    font-size: 12px;
-    color: #777;
-}
-
-.book-card .price {
-    color: #e53e3e;
-    font-weight: bold;
-}
-
-.btn-cart {
-    margin-top: 10px;
-    padding: 8px;
-    width: 100%;
-
-    border: 1px solid #0d6efd;
-    color: #0d6efd;
-    background: white;
-
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-/* ---------------- 우측 사이드바 ---------------- */
-.right-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.right-title {
-    margin-bottom: 15px;
-    font-size: 16px;
-}
-
-/* 로그인 */
-.login-form input {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 10px;
-
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.btn-login {
-    background-color: #0d6efd;
-    color: white;
-
-    width: 100%;
-    padding: 12px;
-
-    border: none;
-    border-radius: 4px;
-
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.login-links {
-    text-align: center;
-    font-size: 12px;
-
-    margin-top: 10px;
-    color: #777;
-}
-
-/* 인기 도서 */
-.ranking-list {
-    list-style: none;
-    margin-top: 10px;
-}
-
-.ranking-list li {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-
-    margin-bottom: 15px;
-    font-size: 14px;
-}
-
-.ranking-list li .rank {
-    font-weight: bold;
-    color: #0d6efd;
-    width: 20px;
-}
-
-.ranking-list li img {
-    width: 40px;
-    height: 55px;
-    background-color: #ddd;
-}
-
-.rank-title {
-    font-weight: bold;
-}
-
-.rank-author {
-    font-size: 12px;
-    color: #777;
-}
+/* 우측 로그인 */
+.login-form input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; }
+.btn-login { background-color: #0d6efd; color: white; width: 100%; padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
