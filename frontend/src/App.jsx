@@ -11,7 +11,6 @@ function App() {
     const fetchBooks = async () => {
         try {
             const response = await fetch('/db.json');
-            // 책 자겨오는 것
             if (!response.ok) {
                 throw new Error('도서 데이터를 불러오지 못했습니다.');
             }
