@@ -41,6 +41,10 @@ public class Book {
     @Column(columnDefinition = "TEXT")
     private String coverUrl;
 
+    //생성된 영상의 주소를 저장할 컬럼
+    @Column(columnDefinition = "TEXT")
+    private String videoUrl;
+
     private String isbn;
 
     private Boolean isAvailable;
