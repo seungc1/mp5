@@ -2,6 +2,7 @@ package com.aivle.bookapp.service;
 
 import com.aivle.bookapp.entity.Book;
 import com.aivle.bookapp.repository.BookRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -23,6 +24,12 @@ public class OpenAiVideoService {
     private final BookRepository bookRepository;
     private final RestTemplate restTemplate;
 
+    @Value("${app.upload.path}")
+    private String uploadPath;
+
+    @Value("${app.ffmpeg.path}")
+    private String ffmpegPath;
+
     public OpenAiVideoService(BookRepository bookRepository) {
         this.bookRepository = bookRepository;
         this.restTemplate = new RestTemplate();
@@ -39,20 +46,21 @@ public class OpenAiVideoService {
         }
 
         System.out.println("--- 🎬 [" + title + "] 진짜 영상 제작 파이프라인 가동 ---");
+        System.out.println("📂 업로드 경로: " + uploadPath);
 
-        // [Step 1] GPT 대본 생성 (진짜 통신)
+        // [Step 1] GPT 대본 생성
         String script = generateScript(title, apiKey);
         System.out.println("✅ [1/3] GPT 대본 완성: " + script);
 
-        // [Step 2] OpenAI TTS 음성 생성 및 파일 저장 (진짜 통신)
+        // [Step 2] OpenAI TTS 음성 생성 및 파일 저장
         String audioFilePath = generateTtsAudio(title, script, apiKey);
         System.out.println("✅ [2/3] TTS 오디오 파일 생성 완료");
 
-        // [Step 3] Base64 표지 이미지 + TTS 오디오 합쳐서 진짜 MP4 영상 빌드 (FFmpeg 엔진 가동)
+        // [Step 3] 표지 이미지 + TTS 오디오 → MP4 합성
         String videoWebUrl = mergeAudioAndVideoWithCover(book, audioFilePath);
         System.out.println("✅ [3/3] FFmpeg 비디오 합성 최종 완료!");
 
-        // 완성된 웹 주소(/videos/파일명.mp4)를 DB에 보관
+        // 완성된 웹 경로(/videos/파일명.mp4)를 DB에 저장
         book.setVideoUrl(videoWebUrl);
         bookRepository.save(book);
 
@@ -82,7 +90,7 @@ public class OpenAiVideoService {
         return (String) messageResponse.get("content");
     }
 
-    // OpenAI TTS 오디오 생성
+    // OpenAI TTS 오디오 생성 및 저장
     private String generateTtsAudio(String title, String script, String apiKey) {
         String url = "https://api.openai.com/v1/audio/speech";
         HttpHeaders headers = new HttpHeaders();
@@ -98,36 +106,42 @@ public class OpenAiVideoService {
         ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.POST, entity, byte[].class);
 
         try {
-            Path uploadPath = Paths.get("uploads");
-            if (!Files.exists(uploadPath)) Files.createDirectories(uploadPath);
+            // application.properties 의 uploadPath 사용
+            Path dir = Paths.get(uploadPath);
+            if (!Files.exists(dir)) Files.createDirectories(dir);
 
-            String cleanTitle = title.replaceAll(" ", "_");
+            String cleanTitle = title.replaceAll("[^a-zA-Z0-9가-힣]", "_");
             String fileName = "audio_" + cleanTitle + "_" + System.currentTimeMillis() + ".mp3";
-            Path filePath = uploadPath.resolve(fileName);
+            Path filePath = dir.resolve(fileName);
             Files.write(filePath, response.getBody());
 
+            System.out.println("🎵 오디오 저장 경로: " + filePath.toAbsolutePath());
             return filePath.toAbsolutePath().toString();
         } catch (Exception e) {
-            throw new RuntimeException("오디오 저장 실패", e);
+            throw new RuntimeException("오디오 저장 실패: " + e.getMessage(), e);
         }
     }
 
-    // 🔥 핵심: Base64 이미지를 풀어서 오디오와 함께 MP4 비디오로 합성하는 FFmpeg 로직
+    // 표지 이미지 + 오디오 → MP4 합성 (FFmpeg)
     private String mergeAudioAndVideoWithCover(Book book, String audioPath) {
-        System.out.println("⏳ FFmpeg 비디오 인코딩 시작 (오디오 엔진 믹싱 중)...");
+        System.out.println("⏳ FFmpeg 비디오 인코딩 시작...");
 
-        String cleanTitle = book.getTitle().replaceAll(" ", "_");
+        String cleanTitle = book.getTitle().replaceAll("[^a-zA-Z0-9가-힣]", "_");
         String timestamp = String.valueOf(System.currentTimeMillis());
 
-        String imagePath = "uploads/temp_cover_" + cleanTitle + "_" + timestamp + ".png";
+        // uploadPath 기준으로 파일 경로 구성
+        Path dir = Paths.get(uploadPath);
+        String imagePath = dir.resolve("temp_cover_" + cleanTitle + "_" + timestamp + ".png").toAbsolutePath().toString();
         String videoFileName = "final_video_" + cleanTitle + "_" + timestamp + ".mp4";
-        String videoOutputPath = "uploads/" + videoFileName;
+        String videoOutputPath = dir.resolve(videoFileName).toAbsolutePath().toString();
 
-        // 1. DB의 Base64 텍스트를 진짜 이미지 파일(.png)로 물리적 복원
+        System.out.println("🖼️  임시 이미지 경로: " + imagePath);
+        System.out.println("🎬 출력 영상 경로: " + videoOutputPath);
+
+        // 1. Base64 표지 이미지 → 파일 복원
         try {
             String base64Data = book.getCoverUrl();
-            // "data:image/png;base64," 같은 접두사가 붙어있다면 잘라냅니다.
-            if (base64Data.contains(",")) {
+            if (base64Data != null && base64Data.contains(",")) {
                 base64Data = base64Data.split(",")[1];
             }
             byte[] imageBytes = Base64.getDecoder().decode(base64Data);
@@ -135,50 +149,45 @@ public class OpenAiVideoService {
                 fos.write(imageBytes);
             }
         } catch (Exception e) {
-            throw new RuntimeException("DB의 Base64 표지 이미지를 파일로 복원하는데 실패했습니다.", e);
+            throw new RuntimeException("Base64 표지 이미지 복원 실패: " + e.getMessage(), e);
         }
 
-        // 2. 외부 프로세스로 FFmpeg 명령어 실행 (이미지 1장 + mp3 ➔ mp4 비디오 완성)
-        // 오디오 길이에 딱 맞춰 영상이 끝나도록 설정(-shortest)
+        // 2. FFmpeg 실행 (application.properties 의 app.ffmpeg.path 사용)
         ProcessBuilder processBuilder = new ProcessBuilder(
-                "ffmpeg", "-y",
+                ffmpegPath, "-y",
                 "-loop", "1", "-i", imagePath,
                 "-i", audioPath,
-                "-vf", "scale=720:-2", // 👈 [핵심 추가] 어떤 이미지가 와도 가로 720, 세로 짝수로 맞춰주는 마법의 필터
+                "-vf", "scale=720:-2",
                 "-c:v", "libx264", "-tune", "stillimage",
                 "-c:a", "aac", "-b:a", "192k",
                 "-pix_fmt", "yuv420p",
                 "-shortest",
                 videoOutputPath
         );
-
-
-
-        // 🔥 [이 줄을 무조건 추가하세요!] 외부 프로세스의 로그 버퍼가 터지는 것을 막아주는 마법의 한 줄
         processBuilder.inheritIO();
-
-
-
-
 
         try {
             Process process = processBuilder.start();
-            int exitCode = process.waitFor(); // 영상 변환이 완료될 때까지 안전하게 대기
+            int exitCode = process.waitFor();
 
-            // 3. 작업에 사용된 임시 표지 이미지 파일 및 원본 mp3 깔끔하게 청소(삭제)
+            // 임시 파일 정리
             new File(imagePath).delete();
             new File(audioPath).delete();
 
             if (exitCode != 0) {
-                throw new RuntimeException("FFmpeg 인코딩 에러가 발생했습니다. 에러 코드: " + exitCode);
+                throw new RuntimeException("FFmpeg 인코딩 실패. 종료 코드: " + exitCode);
             }
 
-            // WebConfig에 설정해둔 주소 형식으로 리턴 (/videos/파일명.mp4)
+            // 실제 저장된 파일 절대경로: uploadPath/videoFileName
+            // 프론트에 돌려줄 웹 경로: /videos/파일명.mp4
+            // → Vite proxy /videos → Spring /videos/** → file:uploadPath/
+            System.out.println("✅ 영상 저장 완료: " + videoOutputPath);
+            System.out.println("🌐 프론트 접근 URL: /videos/" + videoFileName);
             return "/videos/" + videoFileName;
 
         } catch (IOException | InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException("영상 합성 중 시스템 예외 발생", e);
+            throw new RuntimeException("영상 합성 중 시스템 예외 발생: " + e.getMessage(), e);
         }
     }
 }

@@ -1,4 +1,5 @@
 import BookGrid from "../components/BookGrid";
+import BestsellerSection from "../components/BestsellerSection";
 
 function HomePage({
   books,
@@ -18,6 +19,9 @@ function HomePage({
         </h2>
         <p>Search books across a variety of categories.</p>
       </section>
+
+      {/* 베스트셀러 AI 영상 섹션 */}
+      <BestsellerSection />
 
       <section className="box">
         <h3>{title}</h3>
