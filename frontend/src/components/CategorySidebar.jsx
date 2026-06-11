@@ -6,7 +6,7 @@ function CategorySidebar({
 }) {
   return (
     <aside className="left-sidebar box">
-      <h3>Browse by Category</h3>
+      <h3>카테고리</h3>
       <ul className="menu-list">
         {categories.map((category) => {
           const isActive = activeCategory === category && isHomeView;

@@ -73,6 +73,17 @@ button {
   border: 0;
   background: transparent;
   color: inherit;
+  white-space: nowrap;
+}
+
+.nav-count {
+  display: inline-block;
+  min-width: 4ch;
+  text-align: left;
+}
+
+.nav-count-hidden {
+  visibility: hidden;
 }
 
 .container {

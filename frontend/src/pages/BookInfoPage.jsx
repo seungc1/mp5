@@ -9,7 +9,7 @@ const detailFields = [
   ["ISBN", "isbn"],
   ["Type", "type"],
   ["Price", "price"],
-  ["ID", "id"],
+  // ["ID", "id"],
 ];
 
 function getCover(book) {

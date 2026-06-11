@@ -2,14 +2,14 @@ const transparentPixel =
   "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
 
 function formatPrice(price) {
-  return `${price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} won`;
+  return `${price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}원`;
 }
 
 function getCover(book) {
   return book.cover || book.coverers || book.coverUrl || book.coverImageUrl || "";
 }
 
-function BookCard({ book, onBookSelect, onAddToCart }) {
+function BookCard({ book, onBookSelect, onAddToCart, onToggleWishlist, isWished }) {
   const cover = getCover(book);
   const publishedYear = book.publishedYear || book.year;
   const detail = [book.publisher, publishedYear].filter(Boolean).join(" / ");
@@ -24,7 +24,7 @@ function BookCard({ book, onBookSelect, onAddToCart }) {
   const handleKeyDown = (event) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      onBookSelect(book);
+      onBookSelect?.(book);
     }
   };
 
@@ -33,13 +33,38 @@ function BookCard({ book, onBookSelect, onAddToCart }) {
       className="book-card"
       role="button"
       tabIndex={0}
-      title="View book details"
-      onClick={() => onBookSelect(book)}
+      title="도서 상세 보기"
+      onClick={() => onBookSelect?.(book)}
       onKeyDown={handleKeyDown}
+      style={{ position: "relative" }}
     >
-      <img src={cover} alt={book.title || "Book cover"} onError={handleImageError} />
-      <h4 className="title">{book.title || "Untitled book"}</h4>
-      <p className="author">{book.author || "Unknown author"}</p>
+      {onToggleWishlist && (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            onToggleWishlist(book);
+          }}
+          style={{
+            position: "absolute",
+            top: "8px",
+            right: "8px",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "20px",
+            lineHeight: 1,
+            zIndex: 1,
+          }}
+          aria-label={isWished ? "찜 해제" : "찜하기"}
+        >
+          {isWished ? "❤️" : "🤍"}
+        </button>
+      )}
+
+      <img src={cover} alt={book.title || "도서 표지"} onError={handleImageError} />
+      <h4 className="title">{book.title || "제목 없음"}</h4>
+      <p className="author">{book.author || "저자 미상"}</p>
       {detail && <p className="book-detail">{detail}</p>}
       {book.isbn && <p className="book-detail">ISBN {book.isbn}</p>}
       {hasPrice && <p className="price">{formatPrice(price)}</p>}
@@ -48,10 +73,10 @@ function BookCard({ book, onBookSelect, onAddToCart }) {
         type="button"
         onClick={(event) => {
           event.stopPropagation();
-          onAddToCart(book);
+          onAddToCart?.(book);
         }}
       >
-        Add to Cart
+        🛒 장바구니 담기
       </button>
     </article>
   );
