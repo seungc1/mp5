@@ -4,16 +4,20 @@ import {
   loadTossPayments,
   ANONYMOUS,
 } from "@tosspayments/tosspayments-sdk";
+import { useLocation } from "react-router-dom";
+
 
 const clientKey = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
 
 function PaymentPage() {
   const navigate = useNavigate();
   const [widgets, setWidgets] = useState(null);
+  const location = useLocation();
 
+  const totalAmount = location.state?.amount;
   const amount = {
     currency: "KRW",
-    value: 100,
+    value: totalAmount,
   };
 
   useEffect(() => {

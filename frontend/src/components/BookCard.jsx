@@ -2,7 +2,7 @@ const transparentPixel =
   "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
 
 function formatPrice(price) {
-  return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return `${price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} won`;
 }
 
 function getCover(book) {
@@ -42,13 +42,13 @@ function BookCard({ book, onBookSelect, onAddToCart }) {
       <p className="author">{book.author || "Unknown author"}</p>
       {detail && <p className="book-detail">{detail}</p>}
       {book.isbn && <p className="book-detail">ISBN {book.isbn}</p>}
-      {hasPrice && <p className="price">{formatPrice(price)}원</p>}
+      {hasPrice && <p className="price">{formatPrice(price)}</p>}
       <button
         className="btn-cart"
         type="button"
         onClick={(event) => {
           event.stopPropagation();
-          onAddToCart(book.title || "Untitled book");
+          onAddToCart(book);
         }}
       >
         Add to Cart

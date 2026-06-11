@@ -37,6 +37,7 @@ function App() {
   const [searchTitle, setSearchTitle] = useState("Recommended Books");
   const [searchStatus, setSearchStatus] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
 
   const fetchBooksFromDb = async () => {
     try {
@@ -161,13 +162,52 @@ function App() {
     goHome();
   };
 
-  const handleAddToCart = (bookTitle) => {
+  const getBookCartKey = (book) =>
+    book.id || book.isbn || `${book.title || "untitled"}-${book.author || "unknown"}`;
+
+  const handleAddToCart = (book) => {
     if (!isLoggedIn) {
       alert("Please log in first.");
       return;
     }
 
-    alert(`'${bookTitle}' was added to your cart.`);
+    setCartItems((currentItems) => {
+      const cartKey = getBookCartKey(book);
+      const existingItem = currentItems.find((item) => item.cartKey === cartKey);
+
+      if (existingItem) {
+        return currentItems.map((item) =>
+          item.cartKey === cartKey ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+
+      return [
+        ...currentItems,
+        {
+          ...book,
+          cartKey,
+          quantity: 1,
+        },
+      ];
+    });
+
+    alert(`'${book.title || "Untitled book"}' was added to your cart.`);
+  };
+
+  const handleUpdateCartQuantity = (cartKey, quantity) => {
+    setCartItems((currentItems) => {
+      if (quantity <= 0) {
+        return currentItems.filter((item) => item.cartKey !== cartKey);
+      }
+
+      return currentItems.map((item) =>
+        item.cartKey === cartKey ? { ...item, quantity } : item
+      );
+    });
+  };
+
+  const handleRemoveFromCart = (cartKey) => {
+    setCartItems((currentItems) => currentItems.filter((item) => item.cartKey !== cartKey));
   };
 
   const handleBookSelect = (book) => {
@@ -179,7 +219,14 @@ function App() {
       case "mypage":
         return <MyPage />;
       case "cart":
-        return <CartPage onContinueShopping={goHome} />;
+        return (
+          <CartPage
+            items={cartItems}
+            onContinueShopping={goHome}
+            onRemoveItem={handleRemoveFromCart}
+            onUpdateQuantity={handleUpdateCartQuantity}
+          />
+        );
       case "wishlist":
         return <WishlistPage />;
       case "ai-cover":
