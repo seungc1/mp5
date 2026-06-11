@@ -1,4 +1,4 @@
-package com.aivle.bookapp.reposiitory;
+package com.aivle.bookapp.repository;
 
 
 

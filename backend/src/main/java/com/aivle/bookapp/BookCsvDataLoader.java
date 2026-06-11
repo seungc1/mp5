@@ -1,7 +1,7 @@
 package com.aivle.bookapp;
 
 import com.aivle.bookapp.entity.Book;
-import com.aivle.bookapp.reposiitory.BookRepository;
+import com.aivle.bookapp.repository.BookRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;

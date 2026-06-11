@@ -1,7 +1,7 @@
 package com.aivle.bookapp.controller;
 
 import com.aivle.bookapp.entity.Book;
-import com.aivle.bookapp.reposiitory.BookRepository;
+import com.aivle.bookapp.repository.BookRepository;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
