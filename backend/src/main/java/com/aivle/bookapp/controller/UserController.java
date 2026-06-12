@@ -6,7 +6,14 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -49,8 +56,23 @@ public class UserController {
 
             User loginUser = userService.login(userId, userpassword);
 
-            // 세션에 로그인 사용자 저장
             session.setAttribute("loginUser", loginUser);
+
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            loginUser.getUserId(),
+                            null,
+                            List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                    );
+
+            SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+            securityContext.setAuthentication(authentication);
+            SecurityContextHolder.setContext(securityContext);
+
+            session.setAttribute(
+                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                    securityContext
+            );
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
@@ -113,6 +135,7 @@ public class UserController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpSession session) {
 
+        SecurityContextHolder.clearContext();
         session.invalidate();
 
         return ResponseEntity.ok(Map.of(

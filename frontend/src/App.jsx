@@ -79,6 +79,7 @@ function App() {
   const [userId, setUserId] = useState(() => localStorage.getItem("loggedInUserId") || "");
   const [userPw, setUserPw] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem("loggedInUserId"));
+  const [loginUser, setLoginUser] = useState(null);
 
   const [cartItems, setCartItems] = useState([]);
   const [wishlist, setWishlist] = useState([]);
@@ -92,6 +93,40 @@ function App() {
 
     return [...DEFAULT_CATEGORIES, ...dataCategories];
   }, [allBooks]);
+
+  const rememberApiUser = (data) => {
+    setIsLoggedIn(true);
+    setUserId(data.userId);
+    setLoginUser({
+      userId: data.userId,
+      username: data.username,
+    });
+    localStorage.setItem("loggedInUserId", data.userId);
+
+    setMembers((currentMembers) => {
+      const existing = currentMembers.some((member) => member.id === data.userId);
+      if (existing) {
+        return currentMembers.map((member) =>
+          member.id === data.userId
+            ? { ...member, name: data.username, source: "api" }
+            : member
+        );
+      }
+
+      return [
+        ...currentMembers,
+        { id: data.userId, pw: "", name: data.username, source: "api" },
+      ];
+    });
+  };
+
+  const clearLoginState = () => {
+    setIsLoggedIn(false);
+    setLoginUser(null);
+    setUserId("");
+    setUserPw("");
+    localStorage.removeItem("loggedInUserId");
+  };
 
   const fetchBooksFromDb = async () => {
     setIsLoading(true);
@@ -122,51 +157,32 @@ function App() {
     }
   };
 
+  const checkLoginStatus = async () => {
+    if (!localStorage.getItem("loggedInUserId")) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/users/me", {
+        method: "GET",
+        credentials: "include",
+      });
+      const data = await readResponseJson(response);
+
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.message || "로그인 상태가 아닙니다.");
+      }
+
+      rememberApiUser(data);
+    } catch (error) {
+      console.error("Login status check failed:", error);
+      clearLoginState();
+    }
+  };
+
   useEffect(() => {
     fetchBooksFromDb();
-  }, []);
-
-  useEffect(() => {
-    const checkSession = async () => {
-      if (!localStorage.getItem("loggedInUserId")) {
-        return;
-      }
-
-      try {
-        const response = await fetch("/api/users/me", {
-          credentials: "include",
-        });
-        const data = await readResponseJson(response);
-
-        if (!response.ok || !data?.success) {
-          throw new Error(data?.message || "로그인 상태가 아닙니다.");
-        }
-
-        setIsLoggedIn(true);
-        setUserId(data.userId);
-        setMembers((currentMembers) => {
-          const existing = currentMembers.some((member) => member.id === data.userId);
-          if (existing) {
-            return currentMembers.map((member) =>
-              member.id === data.userId
-                ? { ...member, name: data.username, source: "api" }
-                : member
-            );
-          }
-
-          return [
-            ...currentMembers,
-            { id: data.userId, pw: "", name: data.username, source: "api" },
-          ];
-        });
-      } catch {
-        setIsLoggedIn(false);
-        setUserId("");
-        localStorage.removeItem("loggedInUserId");
-      }
-    };
-
-    checkSession();
+    checkLoginStatus();
   }, []);
 
   useEffect(() => {
@@ -245,7 +261,7 @@ function App() {
   const handleLogin = async () => {
     const username = userId.trim();
 
-    if (!username || !userPw) {
+    if (!username || !userPw.trim()) {
       alert("아이디와 비밀번호를 입력해주세요.");
       return;
     }
@@ -265,26 +281,9 @@ function App() {
         throw new Error(data?.message || "아이디 또는 비밀번호가 틀렸습니다.");
       }
 
-      setMembers((currentMembers) => {
-        const existing = currentMembers.some((member) => member.id === data.userId);
-        if (existing) {
-          return currentMembers.map((member) =>
-            member.id === data.userId
-              ? { ...member, name: data.username, source: "api" }
-              : member
-          );
-        }
-
-        return [
-          ...currentMembers,
-          { id: data.userId, pw: "", name: data.username, source: "api" },
-        ];
-      });
-
-      setIsLoggedIn(true);
-      setUserId(data.userId);
+      rememberApiUser(data);
       setUserPw("");
-      localStorage.setItem("loggedInUserId", data.userId);
+      alert(`${data.username}님 로그인되었습니다.`);
     } catch (error) {
       alert(error.message);
     }
@@ -300,10 +299,7 @@ function App() {
       console.error("Logout failed:", error);
     }
 
-    setIsLoggedIn(false);
-    setUserId("");
-    setUserPw("");
-    localStorage.removeItem("loggedInUserId");
+    clearLoginState();
     goHome();
   };
 
@@ -328,7 +324,9 @@ function App() {
 
       if (existingItem) {
         return currentItems.map((item) =>
-          item.cartKey === cartKey ? { ...item, quantity: item.quantity + 1 } : item
+          item.cartKey === cartKey
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
         );
       }
 
@@ -487,6 +485,7 @@ function App() {
         <aside className="right-sidebar">
           <LoginPanel
             isLoggedIn={isLoggedIn}
+            loginUser={loginUser}
             userId={userId}
             userPw={userPw}
             members={members}

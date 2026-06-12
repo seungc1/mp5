@@ -27,7 +27,27 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers("/api/users/signup", "/api/users/login").permitAll()
+
+                        .requestMatchers(
+                                "/api/users/signup",
+                                "/api/users/login",
+                                "/api/users/me"
+                        ).permitAll()
+
+                        .requestMatchers(
+                                "/books",
+                                "/books/**",
+                                "/api/books/search",
+                                "/api/images/generate",
+                                "/api/videos/generate",
+                                "/videos/**"
+                        ).permitAll()
+
+                        .requestMatchers(
+                                "/api/users/mypage",
+                                "/api/users/logout"
+                        ).authenticated()
+
                         .anyRequest().permitAll()
                 );
 

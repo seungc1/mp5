@@ -1,5 +1,6 @@
 function LoginPanel({
   isLoggedIn,
+  loginUser,
   userId,
   userPw,
   members,
@@ -10,6 +11,8 @@ function LoginPanel({
   onSignup,
 }) {
   const currentUser = members?.find((member) => member.id === userId);
+  const displayName = loginUser?.username || currentUser?.name || userId;
+  const displayId = loginUser?.userId || userId;
 
   return (
     <div className="box">
@@ -18,7 +21,9 @@ function LoginPanel({
           <h3 style={{ marginBottom: "15px" }}>내 정보</h3>
           <div style={{ fontSize: "50px", marginBottom: "10px" }}>🧑‍💻</div>
           <p style={{ fontSize: "16px", marginBottom: "20px" }}>
-            <strong>{currentUser?.name || userId}</strong>님
+            <strong>{displayName}</strong>님
+            <br />
+            ID: {displayId}
             <br />
             환영합니다!
           </p>

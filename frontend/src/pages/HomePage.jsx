@@ -1,4 +1,5 @@
 import BookGrid from "../components/BookGrid";
+import BestsellerSection from "../components/BestsellerSection";
 
 function HomePage({
   books,
@@ -20,6 +21,9 @@ function HomePage({
         </h2>
         <p>다양한 분야의 도서를 지금 바로 검색해보세요!</p>
       </section>
+
+      {/* 베스트셀러 AI 영상 섹션 */}
+      <BestsellerSection />
 
       <section className="box">
         <h3>{title}</h3>

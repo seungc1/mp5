@@ -9,15 +9,13 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class BookService {
 
-    private static final Path BOOK_CSV_PATH = Path.of(
-            "backend", "src", "main", "resources", "data", "books.csv"
-    );
+    private static final Path CSV_PATH = Path.of("runtime-data", "books.csv");
     private static final List<String> CSV_HEADERS = List.of(
             "title",
             "author",
@@ -52,7 +50,6 @@ public class BookService {
     public Book createBook(Book book) {
         Book savedBook = bookRepository.save(book);
         saveBooksToCsv();
-
         return savedBook;
     }
 
@@ -76,7 +73,6 @@ public class BookService {
 
         Book savedBook = bookRepository.save(existingBook);
         saveBooksToCsv();
-
         return savedBook;
     }
 
@@ -85,49 +81,59 @@ public class BookService {
         saveBooksToCsv();
     }
 
-    private void saveBooksToCsv() {
+    public void saveBooksToCsv() {
         try {
-            Files.createDirectories(BOOK_CSV_PATH.getParent());
+            Path parent = CSV_PATH.getParent();
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
 
-            try (BufferedWriter writer = Files.newBufferedWriter(BOOK_CSV_PATH, StandardCharsets.UTF_8)) {
+            List<Book> books = bookRepository.findAll().stream()
+                    .sorted(Comparator.comparing(Book::getId, Comparator.nullsLast(Long::compareTo)))
+                    .toList();
+
+            try (BufferedWriter writer = Files.newBufferedWriter(CSV_PATH, StandardCharsets.UTF_8)) {
                 writer.write(String.join(",", CSV_HEADERS));
                 writer.newLine();
 
-                for (Book book : bookRepository.findAll()) {
-                    writer.write(toCsvLine(List.of(
-                            valueOrEmpty(book.getTitle()),
-                            valueOrEmpty(book.getAuthor()),
-                            valueOrEmpty(book.getPublisher()),
-                            valueOrEmpty(book.getYear()),
-                            valueOrEmpty(book.getType()),
-                            valueOrEmpty(book.getContent()),
-                            valueOrEmpty(book.getDescription()),
-                            valueOrEmpty(book.getCoverImageUrl()),
-                            valueOrEmpty(book.getCoverUrl()),
-                            valueOrEmpty(book.getVideoUrl()),
-                            valueOrEmpty(book.getIsbn()),
-                            valueOrEmpty(book.getIsAvailable()),
-                            valueOrEmpty(book.getPrice())
-                    )));
+                for (Book book : books) {
+                    writer.write(toCsvRow(book));
                     writer.newLine();
                 }
             }
         } catch (IOException error) {
-            throw new IllegalStateException("Book CSV save failed.", error);
+            throw new IllegalStateException("books.csv 저장에 실패했습니다.", error);
         }
     }
 
-    private String toCsvLine(List<String> values) {
-        return values.stream()
-                .map(this::escapeCsvValue)
-                .collect(Collectors.joining(","));
+    private String toCsvRow(Book book) {
+        return String.join(",",
+                csvValue(book.getTitle()),
+                csvValue(book.getAuthor()),
+                csvValue(book.getPublisher()),
+                csvValue(book.getYear()),
+                csvValue(book.getType()),
+                csvValue(book.getContent()),
+                csvValue(book.getDescription()),
+                csvValue(book.getCoverImageUrl()),
+                csvValue(book.getCoverUrl()),
+                csvValue(book.getVideoUrl()),
+                csvValue(book.getIsbn()),
+                csvValue(book.getIsAvailable()),
+                csvValue(book.getPrice())
+        );
     }
 
-    private String escapeCsvValue(String value) {
-        return "\"" + value.replace("\"", "\"\"") + "\"";
-    }
+    private String csvValue(Object value) {
+        if (value == null) {
+            return "";
+        }
 
-    private String valueOrEmpty(Object value) {
-        return value == null ? "" : value.toString();
+        String text = String.valueOf(value);
+        if (text.contains("\"") || text.contains(",") || text.contains("\n") || text.contains("\r")) {
+            return "\"" + text.replace("\"", "\"\"") + "\"";
+        }
+
+        return text;
     }
 }
