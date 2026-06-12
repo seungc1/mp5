@@ -7,7 +7,10 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +20,8 @@ import java.util.Map;
 @Component
 public class BookCsvDataLoader implements CommandLineRunner {
 
-    private static final String CSV_PATH = "data/books.csv";
+    private static final String RESOURCE_CSV_PATH = "data/books.csv";
+    private static final Path RUNTIME_CSV_PATH = Path.of("runtime-data", "books.csv");
 
     private final BookRepository bookRepository;
 
@@ -31,13 +35,7 @@ public class BookCsvDataLoader implements CommandLineRunner {
             return;
         }
 
-        ClassPathResource resource = new ClassPathResource(CSV_PATH);
-
-        if (!resource.exists()) {
-            return;
-        }
-
-        List<List<String>> rows = readCsvRows(resource);
+        List<List<String>> rows = readCsvRows();
 
         if (rows.size() < 2) {
             return;
@@ -61,43 +59,59 @@ public class BookCsvDataLoader implements CommandLineRunner {
         bookRepository.saveAll(books);
     }
 
-    private List<List<String>> readCsvRows(ClassPathResource resource) throws Exception {
+    private List<List<String>> readCsvRows() throws Exception {
+        if (Files.exists(RUNTIME_CSV_PATH)) {
+            try (BufferedReader reader = Files.newBufferedReader(RUNTIME_CSV_PATH, StandardCharsets.UTF_8)) {
+                return readCsvRows(reader);
+            }
+        }
+
+        ClassPathResource resource = new ClassPathResource(RESOURCE_CSV_PATH);
+
+        if (!resource.exists()) {
+            return List.of();
+        }
+
+        try (InputStream inputStream = resource.getInputStream();
+             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+            return readCsvRows(reader);
+        }
+    }
+
+    private List<List<String>> readCsvRows(BufferedReader reader) throws Exception {
         List<List<String>> rows = new ArrayList<>();
 
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))) {
-            StringBuilder currentRow = new StringBuilder();
-            boolean inQuotes = false;
-            int nextChar;
+        StringBuilder currentRow = new StringBuilder();
+        boolean inQuotes = false;
+        int nextChar;
 
-            while ((nextChar = reader.read()) != -1) {
-                char character = (char) nextChar;
-                currentRow.append(character);
+        while ((nextChar = reader.read()) != -1) {
+            char character = (char) nextChar;
+            currentRow.append(character);
 
-                if (character == '"') {
-                    reader.mark(1);
-                    int followingChar = reader.read();
+            if (character == '"') {
+                reader.mark(1);
+                int followingChar = reader.read();
 
-                    if (followingChar == '"') {
-                        currentRow.append((char) followingChar);
-                    } else {
-                        inQuotes = !inQuotes;
+                if (followingChar == '"') {
+                    currentRow.append((char) followingChar);
+                } else {
+                    inQuotes = !inQuotes;
 
-                        if (followingChar != -1) {
-                            reader.reset();
-                        }
+                    if (followingChar != -1) {
+                        reader.reset();
                     }
                 }
-
-                if (character == '\n' && !inQuotes) {
-                    rows.add(parseCsvRow(currentRow.toString()));
-                    currentRow.setLength(0);
-                }
             }
 
-            if (!currentRow.isEmpty()) {
+            if (character == '\n' && !inQuotes) {
                 rows.add(parseCsvRow(currentRow.toString()));
+                currentRow.setLength(0);
             }
+        }
+
+        if (!currentRow.isEmpty()) {
+            rows.add(parseCsvRow(currentRow.toString()));
         }
 
         return rows;
@@ -160,6 +174,7 @@ public class BookCsvDataLoader implements CommandLineRunner {
         book.setDescription(value(row, "description"));
         book.setCoverImageUrl(value(row, "coverImageUrl"));
         book.setCoverUrl(value(row, "coverUrl"));
+        book.setVideoUrl(value(row, "videoUrl"));
         book.setIsbn(value(row, "isbn"));
         book.setIsAvailable(parseBoolean(value(row, "isAvailable")));
         book.setPrice(parseInteger(value(row, "price")) == null ? 0 : parseInteger(value(row, "price")));
