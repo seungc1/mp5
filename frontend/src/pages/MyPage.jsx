@@ -55,6 +55,7 @@ function MyPage({ userId, members, setMembers, onLogout }) {
     try {
       const response = await fetch(`/api/users/${encodeURIComponent(userId)}/password`, {
         method: "PATCH",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -68,7 +69,7 @@ function MyPage({ userId, members, setMembers, onLogout }) {
 
       setMembers((currentMembers) =>
         currentMembers.map((member) =>
-          member.id === userId ? { ...member, name: data.name, source: "api" } : member
+          member.id === userId ? { ...member, name: data.username, source: "api" } : member
         )
       );
       alert("비밀번호가 변경되었습니다.");
@@ -114,6 +115,7 @@ function MyPage({ userId, members, setMembers, onLogout }) {
       if (currentUser?.source !== "local") {
         const response = await fetch(`/api/users/${encodeURIComponent(userId)}`, {
           method: "DELETE",
+          credentials: "include",
         });
 
         if (!response.ok) {

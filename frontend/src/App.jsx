@@ -26,7 +26,7 @@ const DEFAULT_CATEGORIES = [
   "IT/컴퓨터",
 ];
 
-const defaultMembers = [{ id: "admin", pw: "1234", name: "최고관리자", source: "local" }];
+const defaultMembers = [];
 
 function readJsonStorage(key, fallback) {
   try {
@@ -127,6 +127,49 @@ function App() {
   }, []);
 
   useEffect(() => {
+    const checkSession = async () => {
+      if (!localStorage.getItem("loggedInUserId")) {
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/users/me", {
+          credentials: "include",
+        });
+        const data = await readResponseJson(response);
+
+        if (!response.ok || !data?.success) {
+          throw new Error(data?.message || "로그인 상태가 아닙니다.");
+        }
+
+        setIsLoggedIn(true);
+        setUserId(data.userId);
+        setMembers((currentMembers) => {
+          const existing = currentMembers.some((member) => member.id === data.userId);
+          if (existing) {
+            return currentMembers.map((member) =>
+              member.id === data.userId
+                ? { ...member, name: data.username, source: "api" }
+                : member
+            );
+          }
+
+          return [
+            ...currentMembers,
+            { id: data.userId, pw: "", name: data.username, source: "api" },
+          ];
+        });
+      } catch {
+        setIsLoggedIn(false);
+        setUserId("");
+        localStorage.removeItem("loggedInUserId");
+      }
+    };
+
+    checkSession();
+  }, []);
+
+  useEffect(() => {
     localStorage.setItem("members", JSON.stringify(members));
   }, [members]);
 
@@ -210,58 +253,53 @@ function App() {
     try {
       const response = await fetch("/api/users/login", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password: userPw }),
+        body: JSON.stringify({ userId: username, userpassword: userPw }),
       });
       const data = await readResponseJson(response);
 
-      if (!response.ok) {
+      if (!response.ok || !data?.success) {
         throw new Error(data?.message || "아이디 또는 비밀번호가 틀렸습니다.");
       }
 
       setMembers((currentMembers) => {
-        const existing = currentMembers.some((member) => member.id === data.username);
+        const existing = currentMembers.some((member) => member.id === data.userId);
         if (existing) {
           return currentMembers.map((member) =>
-            member.id === data.username
-              ? { ...member, name: data.name, source: "api" }
+            member.id === data.userId
+              ? { ...member, name: data.username, source: "api" }
               : member
           );
         }
 
         return [
           ...currentMembers,
-          { id: data.username, pw: "", name: data.name, source: "api" },
+          { id: data.userId, pw: "", name: data.username, source: "api" },
         ];
       });
 
       setIsLoggedIn(true);
-      setUserId(data.username);
+      setUserId(data.userId);
       setUserPw("");
-      localStorage.setItem("loggedInUserId", data.username);
+      localStorage.setItem("loggedInUserId", data.userId);
     } catch (error) {
-      const localMember = members.find((member) => member.id === username && member.pw === userPw);
-
-      if (localMember) {
-        setMembers((currentMembers) =>
-          currentMembers.map((member) =>
-            member.id === localMember.id ? { ...member, source: "local" } : member
-          )
-        );
-        setIsLoggedIn(true);
-        setUserId(localMember.id);
-        setUserPw("");
-        localStorage.setItem("loggedInUserId", localMember.id);
-        return;
-      }
-
       alert(error.message);
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/users/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+
     setIsLoggedIn(false);
     setUserId("");
     setUserPw("");

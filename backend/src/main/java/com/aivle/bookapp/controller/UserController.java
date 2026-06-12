@@ -4,6 +4,7 @@ import com.aivle.bookapp.entity.User;
 import com.aivle.bookapp.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
@@ -118,11 +119,6 @@ public class UserController {
                 "success", true,
                 "message", "로그아웃 성공"
         ));
-    }
-
-    @PostMapping("/login")
-    public UserService.UserResponse login(@RequestBody UserService.LoginRequest request) {
-        return userService.login(request);
     }
 
     @GetMapping("/check")

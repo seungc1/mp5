@@ -38,7 +38,9 @@ function SignupPage({ members, setMembers, onComplete }) {
     }
 
     try {
-      const response = await fetch(`/api/users/check?username=${encodeURIComponent(username)}`);
+      const response = await fetch(`/api/users/check?username=${encodeURIComponent(username)}`, {
+        credentials: "include",
+      });
       const data = await readResponseJson(response);
 
       if (!response.ok) {
@@ -88,22 +90,23 @@ function SignupPage({ members, setMembers, onComplete }) {
     try {
       const response = await fetch("/api/users/signup", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password: signupPw, name }),
+        body: JSON.stringify({ userId: username, userpassword: signupPw, username: name }),
       });
       const data = await readResponseJson(response);
 
-      if (!response.ok) {
+      if (!response.ok || !data?.success) {
         throw new Error(data?.message || "회원가입에 실패했습니다.");
       }
 
       setMembers((currentMembers) => [
         ...currentMembers,
-        { id: data.username, pw: "", name: data.name, source: "api" },
+        { id: data.userId, pw: "", name: data.username, source: "api" },
       ]);
-      alert(`'${data.name}'님 회원가입이 완료되었습니다.`);
+      alert(`'${data.username}'님 회원가입이 완료되었습니다.`);
       onComplete();
     } catch (error) {
       alert(error.message);
