@@ -564,44 +564,6 @@ public class GlobalExceptionHandler {
 
 ---
 
-## 🔧 트러블슈팅
-
-### 1. H2 Database 연결 오류
-- JDBC URL 오입력으로 DB 연결 실패 → `jdbc:h2:mem:testdb`로 수정
-
-### 2. CORS 오류
-- 프론트(5173)↔백엔드(8080) 포트 차이 → `WebConfig`에 CORS 허용 설정 추가
-
-### 3. PATCH 요청 시 null 덮어쓰기
-- 수정하지 않은 필드가 null로 저장 → null 체크 후 필드별 개별 set으로 해결
-
-### 4. 회원가입 중복 검증 누락
-- 동일 아이디로 중복 가입 가능 → Repository 조회로 중복 검증 로직 추가
-
-### 5. 비밀번호 평문 저장 위험
-- `BCryptPasswordEncoder` 적용으로 암호화 저장
-
-### 6. FFmpeg PATH 인식 실패
-- IntelliJ 실행 시 시스템 PATH 미반영 → `application.properties`에 FFmpeg 절대경로 설정
-  ```properties
-  app.ffmpeg.path=C:/Users/User/AppData/.../ffmpeg.exe
-  ```
-
-### 7. 영상 저장 경로 불일치
-- 스프링 Working Directory와 `uploads/` 상대경로가 어긋남
-- `application.properties`에 `app.upload.path` 절대경로 고정 후 `@Value`로 주입
-
-### 8. Vite 프록시 포트 불일치
-- `vite.config.js` 프록시 대상이 8080이어야 하는데 8082로 설정 → 수정 후 해결
-
-### 9. 이미지 로딩 오류
-- 일부 도서 이미지 URL 누락 → `onError` 기본 이미지 처리 추가
-
-### 10. React 데이터 렌더링 오류
-- 백엔드 응답이 Array / `{ books: [] }` 두 형태 혼재 → `Array.isArray` 분기 처리
-
----
-
 ### 미션 7 — AI 표지 생성 흐름 구현
 
 #### 구현 흐름 개요
@@ -881,3 +843,41 @@ public class Book {
 ```
 
 > `TEXT` 타입 사용 이유: Base64 인코딩된 이미지는 수백 KB~수 MB 크기의 문자열로, `VARCHAR` 최대 길이(255~65535)를 초과하므로 `TEXT` 컬럼에 저장.
+
+---
+
+## 🔧 트러블슈팅
+
+### 1. H2 Database 연결 오류
+- JDBC URL 오입력으로 DB 연결 실패 → `jdbc:h2:mem:testdb`로 수정
+
+### 2. CORS 오류
+- 프론트(5173)↔백엔드(8080) 포트 차이 → `WebConfig`에 CORS 허용 설정 추가
+
+### 3. PATCH 요청 시 null 덮어쓰기
+- 수정하지 않은 필드가 null로 저장 → null 체크 후 필드별 개별 set으로 해결
+
+### 4. 회원가입 중복 검증 누락
+- 동일 아이디로 중복 가입 가능 → Repository 조회로 중복 검증 로직 추가
+
+### 5. 비밀번호 평문 저장 위험
+- `BCryptPasswordEncoder` 적용으로 암호화 저장
+
+### 6. FFmpeg PATH 인식 실패
+- IntelliJ 실행 시 시스템 PATH 미반영 → `application.properties`에 FFmpeg 절대경로 설정
+  ```properties
+  app.ffmpeg.path=C:/Users/User/AppData/.../ffmpeg.exe
+  ```
+
+### 7. 영상 저장 경로 불일치
+- 스프링 Working Directory와 `uploads/` 상대경로가 어긋남
+- `application.properties`에 `app.upload.path` 절대경로 고정 후 `@Value`로 주입
+
+### 8. Vite 프록시 포트 불일치
+- `vite.config.js` 프록시 대상이 8080이어야 하는데 8082로 설정 → 수정 후 해결
+
+### 9. 이미지 로딩 오류
+- 일부 도서 이미지 URL 누락 → `onError` 기본 이미지 처리 추가
+
+### 10. React 데이터 렌더링 오류
+- 백엔드 응답이 Array / `{ books: [] }` 두 형태 혼재 → `Array.isArray` 분기 처리
