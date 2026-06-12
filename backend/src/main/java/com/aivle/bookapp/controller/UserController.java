@@ -4,6 +4,7 @@ import com.aivle.bookapp.entity.User;
 import com.aivle.bookapp.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -141,5 +142,30 @@ public class UserController {
                 "success", true,
                 "message", "로그아웃 성공"
         ));
+    }
+
+    @GetMapping("/check")
+    public UserService.UsernameCheckResponse checkUsername(@RequestParam String username) {
+        return userService.checkUsername(username);
+    }
+
+    @PatchMapping("/{username}/password")
+    public UserService.UserResponse changePassword(
+            @PathVariable String username,
+            @RequestBody UserService.PasswordChangeRequest request
+    ) {
+        return userService.changePassword(username, request);
+    }
+
+    @DeleteMapping("/{username}")
+    public void deleteUser(@PathVariable String username) {
+        userService.deleteUser(username);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException error) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("message", error.getMessage()));
     }
 }

@@ -46,12 +46,6 @@ function EditBookPage({ onBookCreated, onCancel }) {
   };
 
   const handleGenerateClick = async () => {
-    if (!showApiKeyInput) {
-      setShowApiKeyInput(true);
-      setMessage("Use the server OPENAI_API_KEY, or enter a key here before generating.");
-      return;
-    }
-
     if (!formData.title.trim()) {
       setMessage("Enter a book title first.");
       return;
@@ -78,6 +72,7 @@ function EditBookPage({ onBookCreated, onCancel }) {
       setMessage("");
     } catch (error) {
       console.error("AI image generation failed:", error);
+      setShowApiKeyInput(true);
       setMessage(error.message);
     } finally {
       setIsGenerating(false);

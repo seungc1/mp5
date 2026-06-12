@@ -2,6 +2,7 @@ package com.aivle.bookapp.controller;
 
 import com.aivle.bookapp.DTO.VideoRequestDto;
 import com.aivle.bookapp.service.OpenAiVideoService;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,10 +23,22 @@ public class OpenAiVideoController {
 
         System.out.println("--- 🎬 프론트로부터 영상 제작 요청 수신! 책 제목: " + request.getTitle() + " ---");
 
-        // 서비스에게 제목과 키를 던져주고 URL을 받아옴
-        String resultVideoUrl = openAiVideoService.getOrGenerateVideo(request.getTitle(), request.getApiKey());
+        try {
+            // 서비스에게 제목과 키를 던져주고 URL을 받아옴
+            String resultVideoUrl = openAiVideoService.getOrGenerateVideo(request.getTitle(), request.getApiKey());
 
-        // 상태 코드 200과 함께 영상 URL 리턴
-        return ResponseEntity.ok(resultVideoUrl);
+            // 상태 코드 200과 함께 영상 URL 리턴
+            return ResponseEntity.ok()
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .body(resultVideoUrl);
+        } catch (IllegalArgumentException error) {
+            return ResponseEntity.badRequest()
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .body(error.getMessage());
+        } catch (RuntimeException error) {
+            return ResponseEntity.internalServerError()
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .body(error.getMessage());
+        }
     }
 }

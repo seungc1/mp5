@@ -46,3 +46,4 @@ node_modules
 
 uploads/
 runtime-data/
+backend/src/main/resources/static/videos/

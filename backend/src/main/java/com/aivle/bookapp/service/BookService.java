@@ -81,7 +81,7 @@ public class BookService {
         saveBooksToCsv();
     }
 
-    private void saveBooksToCsv() {
+    public void saveBooksToCsv() {
         try {
             Path parent = CSV_PATH.getParent();
             if (parent != null) {

@@ -6,6 +6,9 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
@@ -24,11 +27,8 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // "C:/Backend/mp555/uploads" → "file:C:/Backend/mp555/uploads/"
-        // 경로 끝에 슬래시가 없으면 자동으로 붙여줌
-        String location = uploadPath.endsWith("/") || uploadPath.endsWith("\\")
-                ? "file:" + uploadPath
-                : "file:" + uploadPath + "/";
+        Path uploadDirectory = Paths.get(uploadPath).toAbsolutePath().normalize();
+        String location = uploadDirectory.toUri().toString();
 
         System.out.println("📂 정적 파일 서빙 경로: " + location);
 
