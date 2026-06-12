@@ -25,7 +25,8 @@ function getBookDescription(book) {
 }
 
 function isDatabaseBook(book) {
-  return Number.isInteger(Number(book?.id));
+  const id = Number(book?.id);
+  return book?.source !== "library" && Number.isSafeInteger(id) && id > 0;
 }
 
 function formatValue(label, value) {
@@ -75,6 +76,20 @@ function toBookPayload(formData) {
   };
 }
 
+function toBookPayloadFromBook(book) {
+  return toBookPayload({
+    title: book.title || "",
+    author: book.author || "저자 미상",
+    publisher: book.publisher || "",
+    publishedYear: getPublishedYear(book),
+    isbn: book.isbn || "",
+    type: book.type || "단행본",
+    price: book.price || "",
+    description: getBookDescription(book),
+    cover: getCover(book),
+  });
+}
+
 function BookInfoPage({ isLoggedIn }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -88,6 +103,7 @@ function BookInfoPage({ isLoggedIn }) {
 
   const cover = isEditing ? formData.cover : getCover(book);
   const canEdit = isLoggedIn && isDatabaseBook(book);
+  const canAddToDatabase = isLoggedIn && book && !isDatabaseBook(book);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -183,6 +199,48 @@ function BookInfoPage({ isLoggedIn }) {
     }
   };
 
+  const handleAddToDatabase = async () => {
+    if (!book?.title?.trim()) {
+      setMessage("Title is required before adding this book.");
+      return;
+    }
+
+    setIsSaving(true);
+    setMessage("Adding book to database...");
+
+    try {
+      const response = await fetch("/books", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(toBookPayloadFromBook(book)),
+      });
+      const savedBook = await response.json();
+
+      if (!response.ok) {
+        throw new Error(savedBook.message || "Book creation failed.");
+      }
+
+      const normalizedBook = {
+        ...savedBook,
+        publishedYear: savedBook.year,
+        cover: savedBook.coverUrl || savedBook.coverImageUrl,
+      };
+
+      setBook(normalizedBook);
+      setFormData(toEditForm(normalizedBook));
+      setIsEditing(false);
+      setMessage("Book added to database.");
+      navigate("/bookinfo", { replace: true, state: { book: normalizedBook } });
+    } catch (error) {
+      console.error("Book creation failed:", error);
+      setMessage(error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleDelete = async () => {
     const confirmed = window.confirm(
       `Delete "${book.title || "this book"}"? This cannot be undone.`
@@ -239,11 +297,22 @@ function BookInfoPage({ isLoggedIn }) {
               Edit
             </button>
           )}
+
+          {canAddToDatabase && !isEditing && (
+            <button
+              className="book-info-edit"
+              type="button"
+              disabled={isSaving}
+              onClick={handleAddToDatabase}
+            >
+              {isSaving ? "Adding..." : "Add to DB"}
+            </button>
+          )}
         </div>
 
-        {!canEdit && isLoggedIn && (
+        {canAddToDatabase && (
           <p className="book-info-notice">
-            This search result is not saved in the database yet, so it cannot be edited.
+            This search result is not saved in the database yet. Add it to edit later.
           </p>
         )}
 

@@ -160,6 +160,7 @@ public class BookCsvDataLoader implements CommandLineRunner {
         book.setDescription(value(row, "description"));
         book.setCoverImageUrl(value(row, "coverImageUrl"));
         book.setCoverUrl(value(row, "coverUrl"));
+        book.setVideoUrl(value(row, "videoUrl"));
         book.setIsbn(value(row, "isbn"));
         book.setIsAvailable(parseBoolean(value(row, "isAvailable")));
         book.setPrice(parseInteger(value(row, "price")) == null ? 0 : parseInteger(value(row, "price")));

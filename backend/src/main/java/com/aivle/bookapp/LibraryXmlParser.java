@@ -77,6 +77,7 @@ public class LibraryXmlParser {
                 book.put("publishedYear", publishedYear);
                 book.put("isbn", isbn);
                 book.put("cover", cover);
+                book.put("source", "library");
 
                 books.add(book);
             }
