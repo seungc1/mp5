@@ -4,17 +4,18 @@ phases:
     runtime-versions:
       nodejs: 20
     commands:
-      - npm install -g @angular/cli@17
+      - cd frontend
+      - npm install
   pre_build:
     commands:
       - npm install
   build:
     commands:
-      - ng build -c production
-      - echo "Build completed."
+      - cd frontend
+      - npm run build
     finally:
       - echo This is the finally block execution!
 artifacts:
-  base-directory: dist/my-angular-project
+  base-directory: frontend/dist
   files:
     - '**/*'
