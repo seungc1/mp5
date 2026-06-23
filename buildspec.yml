@@ -1,19 +1,20 @@
 version: 0.2
+
 phases:
   install:
     runtime-versions:
       nodejs: 20
     commands:
-      - echo $CODEBUILD_SRC_DIR
-      - ls -la
-      - npm install
+      - ls -la                          # 루트 확인
+      - cd frontend && npm install      # frontend에서 설치
+
   build:
     commands:
-      - echo $CODEBUILD_SRC_DIR
-      - ls -la
-      - npm run build
-    finally:
-      - echo This is the finally block execution!
+      - ls -la                          # 위치 확인
+      - cd frontend                     # frontend로 이동
+      - ls -la                          # frontend 안 확인
+      - npm run build                   # 바로 빌드
+
 artifacts:
   base-directory: frontend/dist
   files:
