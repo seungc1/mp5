@@ -5,17 +5,13 @@ phases:
     runtime-versions:
       nodejs: 20
     commands:
-      - ls -la                          # 루트 확인
-      - cd frontend && npm install      # frontend에서 설치
+      - cd frontend && npm install
 
   build:
     commands:
-      - ls -la                          # 위치 확인
-      - cd frontend                     # frontend로 이동
-      - ls -la                          # frontend 안 확인
-      - npm run build                   # 바로 빌드
+      - npm run build        # cd frontend 완전히 제거!
 
 artifacts:
-  base-directory: frontend/dist
+  base-directory: dist       # frontend/ 제거! 이미 안에 있으니까
   files:
     - '**/*'
