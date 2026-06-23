@@ -4,15 +4,10 @@ phases:
     runtime-versions:
       nodejs: 20
     commands:
-      - cd frontend
-      - npm install
-  pre_build:
-    commands:
-      - npm install
+      - cd frontend && npm install
   build:
     commands:
-      - cd frontend
-      - npm run build
+      - cd frontend && npm run build
     finally:
       - echo This is the finally block execution!
 artifacts:
