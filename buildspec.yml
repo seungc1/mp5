@@ -5,18 +5,13 @@ phases:
     runtime-versions:
       nodejs: 20
     commands:
-      - npm install
-      - echo "현재 경로:" && pwd           # 지금 어디 있는지
-      - echo "파일 목록:" && ls -la        # 뭐가 있는지
-      - echo "package.json 내용:" && cat package.json   # scripts 확인
+      - npm --prefix frontend install    # frontend 폴더에서 install
 
   build:
     commands:
-      - npm run build        # cd frontend 완전히 제거!
-      - echo "현재 경로:" && pwd           # 지금 어디 있는지
-      - echo "파일 목록:" && ls -la        # 뭐가 있는지
-      - echo "package.json 내용:" && cat package.json   # scripts 확인
+      - npm --prefix frontend run build  # frontend 폴더에서 build
+
 artifacts:
-  base-directory: dist       # frontend/ 제거! 이미 안에 있으니까
+  base-directory: frontend/dist          # 루트 기준 경로
   files:
     - '**/*'
