@@ -1,4 +1,5 @@
 version: 0.2
+
 phases:
   install:
     commands:
@@ -8,8 +9,8 @@ phases:
     commands:
       - aws eks update-kubeconfig --region ap-northeast-2 --name user190-cluster
   build:
-  commands:
-    - kubectl apply -f k8s/ -n user190-app --validate=false
-    - kubectl rollout restart deployment -n user190-app
-    - kubectl rollout status deployment/bookapp-backend -n user190-app --timeout=300s
-    - kubectl rollout status deployment/bookapp-frontend -n user190-app --timeout=300s
+    commands:
+      - kubectl apply -f k8s/ -n user190-app --validate=false
+      - kubectl rollout restart deployment -n user190-app
+      - kubectl rollout status deployment/bookapp-backend -n user190-app --timeout=300s
+      - kubectl rollout status deployment/bookapp-frontend -n user190-app --timeout=300s
