@@ -4,7 +4,7 @@ metadata:
   name: bookapp-backend
   namespace: user190-app
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
