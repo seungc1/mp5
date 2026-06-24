@@ -24,6 +24,6 @@ phases:
       - docker push 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user190-repo3:latest
 
   post_build:
-    commands:
-      - kubectl apply -f k8s/ -n user190-app
-      - kubectl rollout restart deployment -n user190-app
+  commands:
+    - kubectl apply -f k8s/ -n user190-app --validate=false
+    - kubectl rollout restart deployment -n user190-app
