@@ -1,0 +1,15 @@
+version: 0.2
+phases:
+  install:
+    commands:
+      - curl -LO "https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+      - chmod +x kubectl && mv kubectl /usr/local/bin/
+  pre_build:
+    commands:
+      - aws eks update-kubeconfig --region ap-northeast-2 --name user190-cluster
+  build:
+    commands:
+      - kubectl apply -f k8s/ -n user190-app --validate=false
+      - kubectl rollout restart deployment -n user190-app
+      - kubectl rollout status deployment/bookapp-backend -n user190-app
+      - kubectl rollout status deployment/bookapp-frontend -n user190-app
