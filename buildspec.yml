@@ -11,6 +11,8 @@ phases:
       - aws eks update-kubeconfig --region ap-northeast-2 --name user190-cluster
   build:
     commands:
+      - chmod +x gradlew
+      - ./gradlew bootJar -x test
       - docker build -t user190-repo2 ./backend
       - docker tag user190-repo2:latest 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user190-repo2:latest
       - docker push 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user190-repo2:latest
