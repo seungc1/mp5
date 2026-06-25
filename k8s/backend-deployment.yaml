@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/bookapp-backend:latest
+        image: 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user190-repo2:latest
         ports:
         - containerPort: 8080
         env:
