@@ -2,16 +2,18 @@ version: 0.2
 
 phases:
   install:
-    runtime-versions:
-      nodejs: 20
     commands:
-      - npm --prefix frontend install    # frontend 폴더에서 install
-
+      - chmod +x gradlew
+  pre_build:
+    commands:
+      - aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com
   build:
     commands:
-      - npm --prefix frontend run build  # frontend 폴더에서 build
-
-artifacts:
-  base-directory: frontend/dist          # 루트 기준 경로
-  files:
-    - '**/*'
+      - ./gradlew bootJar -x test
+      - cp build/libs/*.jar backend/app.jar
+      - docker build -t user190-repo2 ./backend
+      - docker tag user190-repo2:latest 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user190-repo2:latest
+      - docker push 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user190-repo2:latest
+      - docker build -t user190-repo3 ./frontend
+      - docker tag user190-repo3:latest 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user190-repo3:latest
+      - docker push 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user190-repo3:latest

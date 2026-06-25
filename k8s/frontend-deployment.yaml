@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bookapp-frontend
+  namespace: user190-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bookapp-frontend
+  template:
+    metadata:
+      labels:
+        app: bookapp-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user190-repo3:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bookapp-frontend-svc
+  namespace: user190-app
+spec:
+  selector:
+    app: bookapp-frontend
+  ports:
+  - port: 80
+    targetPort: 80

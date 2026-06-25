@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bookapp-backend
+  namespace: user190-app
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        
+      maxUnavailable: 0  
+  selector:
+    matchLabels:
+      app: bookapp-backend
+  template:
+    metadata:
+      labels:
+        app: bookapp-backend
+    spec:
+      containers:
+      - name: backend
+        image: 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user190-repo2:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: bookapp-secrets
+              key: openai-api-key
+        - name: APP_UPLOAD_PATH
+          value: /app/uploads/
+        volumeMounts:
+        - name: uploads
+          mountPath: /app/uploads
+      volumes:
+      - name: uploads
+        persistentVolumeClaim:
+          claimName: bookapp-uploads-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bookapp-backend-svc
+  namespace: user190-app
+spec:
+  selector:
+    app: bookapp-backend
+  ports:
+  - port: 8080
+    targetPort: 8080

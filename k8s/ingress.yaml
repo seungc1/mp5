@@ -1,0 +1,44 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bookapp-ingress
+  namespace: user190-app
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /books        
+    alb.ingress.kubernetes.io/healthcheck-port: "8080"       
+    alb.ingress.kubernetes.io/success-codes: "200"
+spec:
+  ingressClassName: alb
+  rules:
+  - http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: bookapp-backend-svc
+            port:
+              number: 8080
+      - path: /videos        
+        pathType: Prefix
+        backend:
+          service:
+            name: bookapp-backend-svc
+            port:
+              number: 8080
+      - path: /books         
+        pathType: Prefix
+        backend:
+          service:
+            name: bookapp-backend-svc
+            port:
+              number: 8080
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bookapp-frontend-svc
+            port:
+              number: 80
