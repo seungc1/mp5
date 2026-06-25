@@ -18,6 +18,20 @@ spec:
             name: bookapp-backend-svc
             port:
               number: 8080
+      - path: /videos        
+        pathType: Prefix
+        backend:
+          service:
+            name: bookapp-backend-svc
+            port:
+              number: 8080
+      - path: /books         
+        pathType: Prefix
+        backend:
+          service:
+            name: bookapp-backend-svc
+            port:
+              number: 8080
       - path: /
         pathType: Prefix
         backend:
