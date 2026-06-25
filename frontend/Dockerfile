@@ -1,17 +1,16 @@
-# 1. Node.js 환경을 가져옵니다 (가장 안정적인 18 버전 기준)
-FROM node:18-alpine
-
-# 2. 컨테이너 내부 작업 디렉토리 설정
+# 수정본
+FROM node:20-alpine AS build
 WORKDIR /app
-
-# 3. 라이브러리 설치를 위해 설정 파일들을 먼저 복사
 COPY package*.json ./
-
-# 4. 프로젝트에 필요한 라이브러리들을 설치
 RUN npm install
-
-# 5. 나머지 프론트엔드 소스코드들을 전부 복사
 COPY . .
+RUN npm run build           
 
-# 6. 프론트엔드 서버를 실행 (React 등 프로젝트 설정에 따라 다를 수 있음)
-CMD ["npm", "start"]
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Nginx 프록시 설정
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
