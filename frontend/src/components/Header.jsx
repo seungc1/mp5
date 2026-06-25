@@ -10,7 +10,7 @@ function Header({
   return (
     <header className="site-header">
       <button className="logo-button" type="button" onClick={onLogoClick}>
-        📖 BookStore
+        📖 BookStore Ver 2.0
       </button>
 
       <form className="global-search" onSubmit={onSearch}>
