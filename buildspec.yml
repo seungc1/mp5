@@ -1,0 +1,17 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - npm --prefix frontend install    # frontend 폴더에서 install
+
+  build:
+    commands:
+      - npm --prefix frontend run build  # frontend 폴더에서 build
+
+artifacts:
+  base-directory: frontend/dist          # 루트 기준 경로
+  files:
+    - '**/*'
